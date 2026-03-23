@@ -1,10 +1,5 @@
 # SocialLDG
 
-[//]: # (This is the official repo for the ACM MM 25 paper:)
-
-[//]: # ()
-
-[//]: # ([Robust Understanding of Human-Robot Social Interactions through Multimodal Distillation]&#40;https://arxiv.org/abs/2505.06278&#41; [![arXiv]&#40;https://img.shields.io/badge/arXiv-2505.06278-b31b1b.svg&#41;]&#40;https://arxiv.org/abs/2505.06278&#41;)
 
 <div align="center">
     <img src="docs/teaser2_bg.png", height="400" alt>
@@ -17,7 +12,7 @@ robots can be endowed with such social intelligence by modelling the dynamic rel
 states (latent) and actions (observable state). Our premise is that these states arise from the same underlying
 socio-cognitive process and influence each other dynamically. Drawing inspiration from theories in Cognitive Science, we
 propose a novel multi-task learning framework, termed as \textbf{SocialLDG} that explicitly models the dynamic
-relationship among the states repsented as six distinct tasks. Our framework uses a language model to introduce lexical
+relationship among the states represented as six distinct tasks. Our framework uses a language model to introduce lexical
 priors for each task and employs dynamic graph learning to model task affinity evolving with time. SocialLDG has three
 advantages: First, it achieves state-of-the-art performance on two challenging human-robot social interaction datasets
 available publicly. Second, it supports strong task scalability by learning new tasks seamlessly without catastrophic
@@ -49,8 +44,8 @@ matrix $\mathbf{A}$.
 | **SocialLDG**        | 1.40        | 1.30         | <u>92.25</u> | **91.68**    | **82.51**    | **85.99**    | <u>82.10</u> | **76.85**    | **85.25**    |
 
 Table.1 Comparison with SOTA MTL methods in terms of F1 score (in \%)
-on [JPL-Social [7]](https://github.com/biantongfei/SocialEgoNet)
-and [HARPER [8]](https://github.com/intelligolabs/HARPER). The
+on JPL-Social [7]
+and HARPER [8]. The
 best results are in bold, and the second-best results are underlined. The reported parameter counts (Params) and
 inference latency solely account for the multi-task classifier.
 
@@ -63,42 +58,10 @@ the compared methods, it remains well within the acceptable limits for practical
 
 ## Data
 
-The datasets used in this paper can be downloaded here:
-JPL_Social [7] ([pose](https://drive.google.com/file/d/1_-munn3YrbmLYdqm3pEDV4oUmOwZeTVz/view?usp=drive_link), [videos](http://michaelryoo.com/jpl-interaction.html))
-and
-HARPER [8] ([pose](https://drive.google.com/file/d/1VMUnS4ieDmnLqRk1wRm_cvbRbMnf96c9/view?usp=drive_link), [images](https://github.com/intelligolabs/HARPER)).
-A detailed description of the datasets can be found here: [JPL-Social](https://github.com/biantongfei/SocialEgoNet)
-and [HARPER](https://github.com/intelligolabs/HARPER).
+The datasets used in this paper, JPL-Social [7] and HARPER [8], are publicly available. Please refer to their respective papers for access instructions. 
+After obtaining the datasets, please place them in the `../SocialLDG_data/` directory to run the training and testing scripts.
 
 ## Train and Test
-
-[//]: # (## Installation and download data)
-
-[//]: # ()
-[//]: # (```)
-
-[//]: # (pip install gdown)
-
-[//]: # (gdown --id '1_-munn3YrbmLYdqm3pEDV4oUmOwZeTVz' -O JPL_Social.zip)
-
-[//]: # (gdown --id '1_-1VMUnS4ieDmnLqRk1wRm_cvbRbMnf96c9' -O HARPER.zip)
-
-[//]: # (mkdir -p ./SocialLDG_data)
-
-[//]: # (unzip JPL_Social.zip -d ./SocialLDG_data)
-
-[//]: # (unzip HARPER.zip -d ./SocialLDG_data)
-
-[//]: # (rm JPL_Social.zip)
-
-[//]: # (rm HARPER.zip)
-
-[//]: # (git clone https://github.com/biantongfei/SocialLDG.git)
-
-[//]: # (cd SocialLDG)
-
-[//]: # (```)
-
 
 ### Conda
 
@@ -130,30 +93,6 @@ To test the pretrained weights of SocialLDG, run
 ```
 python scripts/test_SocialLDG.py --cfg configs/SocialLDG.yaml --data_path ../SocialLDG_data/ --checkpoint_path checkpoints/encoder_SocialLDG_contact_current_contact_future_intention_attitude_action_current_action_future.pt 
 ```
-
-[//]: # (## Citation)
-
-[//]: # ()
-[//]: # (Please cite the following paper if you use this repository in your research.)
-
-[//]: # ()
-[//]: # (```)
-
-[//]: # (@inproceedings{bian2025robust,)
-
-[//]: # (  title={Robust Understanding of Human-Robot Social Interactions through Multimodal Distillation},)
-
-[//]: # (  author={Bian, Tongfei and Chollet, Mathieu and Guha, Tanaya},)
-
-[//]: # (  booktitle={Proceedings of the 33rd ACM International Conference on Multimedia},)
-
-[//]: # (  pages={5726--5734},)
-
-[//]: # (  year={2025})
-
-[//]: # (})
-
-[//]: # (```)
 
 ## References
 
