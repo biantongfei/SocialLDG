@@ -1,0 +1,16 @@
+name: SocialSDG
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch-cuda=12.1
+  - torchaudio==2.1.2
+  - torchvision==0.16.2
+  - numpy==1.26.4
+  - opencv
+  - xlrd
+  - openpyxl
+  - seaborn
+variables:
+  LD_LIBRARY_PATH: '/usr/local/cuda-12.1/lib64:'
+  CUDA_HOME: /usr/local/cuda-12.1

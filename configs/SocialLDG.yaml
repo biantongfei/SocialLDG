@@ -1,0 +1,27 @@
+train:
+  batch_size: 128
+  epoch: 'early_stop'
+  encoder_learning_rate: 0.005
+  SocialLDG_learning_rate: 0.005
+  weight_decay: 0
+  zero_mask_rate: 0.5
+  dropout: 0
+
+
+data:
+  sequence_length: 10
+  future_length: 10
+
+
+model:
+  encoder_gcn_layers: 2
+  encoder_time_layers: 2
+  keypoint_hidden_dim: 64
+  num_heads: 4
+  representation_length: 32
+  decoder_time_layers: 2
+  hidden_dim: 64
+  task_token: 'scibert'
+  n_heads: 8
+  subtasks: ['contact_current', 'contact_future', 'intention', 'attitude', 'action_current', 'action_future']
+
