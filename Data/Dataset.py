@@ -11,12 +11,12 @@ action_dict = {'jpl_0': 0, 'jpl_1': 1, 'jpl_2': 2, 'jpl_3': 3, 'jpl_4': 4, 'jpl_
 
 
 class SocialLDGPoseDataset(Dataset):
-    def __init__(self, data_files, sequence_length=10, future_length=10):
+    def __init__(self, data_files, sequence_length=10, future_length=10, stride=10):
         super(SocialLDGPoseDataset, self).__init__()
         self.files = data_files
         self.sequence_length = sequence_length
         self.future_length = future_length
-        self.frame_jump = sequence_length
+        self.stride = stride
         self.pose, self.labels = [], []
         for file in self.files:
             self.get_data_from_file(file)
@@ -52,7 +52,7 @@ class SocialLDGPoseDataset(Dataset):
             last_frame = ori_keypoints_frames[-1:].expand(actual_seq_len - ori_keypoints_frames.shape[0], -1, -1)
             ori_keypoints_frames = torch.cat([ori_keypoints_frames, last_frame], dim=0)
         for frame_index in range(0, ori_keypoints_frames.shape[0] - actual_fut_len + 1,
-                                 (3 if is_jpl else 1) * self.frame_jump):
+                                 (3 if is_jpl else 1) * self.stride):
             zero_frames_num = 0
             for i in range(frame_index, frame_index + actual_seq_len):
                 if ori_keypoints_frames[i].all() == 0:
@@ -123,18 +123,19 @@ class SocialLDGPoseDataset(Dataset):
         return len(self.pose)
 
 
-def get_datasets(data_path, sequence_length=10, future_length=10, test=False):
+def get_datasets(data_path, sequence_length=10, future_length=10, stride=10, test=False):
     print('Loading data from JPL and HARPER dataset for AutoEncoder')
     tra_files, val_files, test_files = get_autoencoder_pose_tra_test_files(data_path=data_path)
     result_str = ''
     if not test:
         trainset = SocialLDGPoseDataset(data_files=tra_files, sequence_length=sequence_length,
-                                        future_length=future_length)
+                                        future_length=future_length, stride=stride)
         result_str += 'Train_set_size: %d, ' % len(trainset)
         valset = SocialLDGPoseDataset(data_files=val_files, sequence_length=sequence_length,
-                                      future_length=future_length)
+                                      future_length=future_length, stride=stride)
         result_str += 'Validation_set_size: %d, ' % len(valset)
-    testset = SocialLDGPoseDataset(data_files=test_files, sequence_length=sequence_length, future_length=future_length)
+    testset = SocialLDGPoseDataset(data_files=test_files, sequence_length=sequence_length, future_length=future_length,
+                                   stride=stride)
     result_str += 'Test_set_size: %d, ' % len(testset)
     print(result_str)
     if not test:

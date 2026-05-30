@@ -1,6 +1,5 @@
 # SocialLDG
 
-
 <div align="center">
     <img src="docs/teaser2_bg.png", height="400" alt>
 </div>
@@ -12,7 +11,8 @@ robots can be endowed with such social intelligence by modelling the dynamic rel
 states (latent) and actions (observable state). Our premise is that these states arise from the same underlying
 socio-cognitive process and influence each other dynamically. Drawing inspiration from theories in Cognitive Science, we
 propose a novel multi-task learning framework, termed as \textbf{SocialLDG} that explicitly models the dynamic
-relationship among the states represented as six distinct tasks. Our framework uses a language model to introduce lexical
+relationship among the states represented as six distinct tasks. Our framework uses a language model to introduce
+lexical
 priors for each task and employs dynamic graph learning to model task affinity evolving with time. SocialLDG has three
 advantages: First, it achieves state-of-the-art performance on two challenging human-robot social interaction datasets
 available publicly. Second, it supports strong task scalability by learning new tasks seamlessly without catastrophic
@@ -41,7 +41,7 @@ matrix $\mathbf{A}$.
 | UinT [4]             | 1.73        | <u>0.74</u>  | 90.55        | 88.65        | <u>81.70</u> | 85.02        | 78.54        | 73.21        | 82.98        |
 | HiPro [5]            | 0.68        | 1.18         | 90.55        | 88.28        | 78.89        | 84.88        | 79.24        | 73.42        | 82.58        |
 | AssociationGraph [6] | 0.45        | 0.91         | 90.93        | <u>89.04</u> | 81.32        | 86.64        | 81.20        | <u>74.31</u> | <u>83.74</u> |
-| **SocialLDG**        | 1.40        | 1.30         | <u>92.25</u> | **91.68**    | **82.51**    | **85.99**    | <u>82.10</u> | **76.85**    | **85.25**    |
+| **SocialLDG**        | 1.40        | 1.30         | <u>92.82</u> | **91.17**    | **84.94**    | **87.61**    | <u>82.66</u> | **76.97**    | **86.03**    |
 
 Table.1 Comparison with SOTA MTL methods in terms of F1 score (in \%)
 on JPL-Social [7]
@@ -49,17 +49,11 @@ and HARPER [8]. The
 best results are in bold, and the second-best results are underlined. The reported parameter counts (Params) and
 inference latency solely account for the multi-task classifier.
 
-SocialLDG achieves an average F1 score of 85.61\% and an average accuracy of 85.23\%, outperforming all the MTL
-baselines. This demonstrates that SocialLDG aligns with the coupling and intrinsic correlations inherent in tasks. The
-action of `punching' is inevitably accompanied by a `negative' attitude and `physical contact'. By using the dynamic
-graph network and the edge generator, SocialLDG integrates dynamic contexts to bridge informational interaction across
-tasks. In terms of computational efficiency, although SocialLDG ranks second to last in parameter size and latency among
-the compared methods, it remains well within the acceptable limits for practical deployment.
-
 ## Data
 
-The datasets used in this paper, JPL-Social [7] and HARPER [8], are publicly available. Please refer to their respective papers for access instructions. 
-After obtaining the datasets, please place them in the `../SocialLDG_data/` directory to run the training and testing scripts.
+The datasets used in this paper, JPL-Social [7] and HARPER [8], are publicly available. Please refer to their respective
+papers for access instructions. After obtaining the datasets, please place them in the `../SocialLDG_data/` directory to
+run the training and testing scripts.
 
 ## Train and Test
 
@@ -93,6 +87,16 @@ To test the pretrained weights of SocialLDG, run
 ```
 python scripts/test_SocialLDG.py --cfg configs/SocialLDG.yaml --data_path ../SocialLDG_data/ --checkpoint_path checkpoints/encoder_SocialLDG_contact_current_contact_future_intention_attitude_action_current_action_future.pt 
 ```
+
+## Matrices dynamic analysis
+
+To generate task affinity matrices, run
+
+```
+python scripts/generate_matrices --cfg configs/SocialLDG.yaml --mc_dropout 0.5 --data_path ../SocialLDG_data/ --pretrained_encoder_socialldg checkpoints/encoder_SocialLDG_contact_current_contact_future_intention_attitude_action_current_action_future.pt --save_csv_path .
+```
+
+To analyse uncertainty-guided dynamic of task affinity matrices, please run task_matrices_dynamic_analysis.ipynb
 
 ## References
 

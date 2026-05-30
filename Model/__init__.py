@@ -55,7 +55,8 @@ class Encoder_SocialLDG(nn.Module):
                  n_heads=2,
                  msg_pass_steps=1,
                  task_token='scibert',
-                 subtasks=original_subtasks
+                 subtasks=original_subtasks,
+                 intermediate_supervision=0.5
                  ):
         super(Encoder_SocialLDG, self).__init__()
         self.encoder = Pose_Encoder(
@@ -74,7 +75,9 @@ class Encoder_SocialLDG(nn.Module):
             n_heads=n_heads,
             msg_pass_steps=msg_pass_steps,
             task_token=task_token,
-            subtasks=subtasks)
+            subtasks=subtasks,
+            intermediate_supervision=intermediate_supervision,
+            dropout=dropout)
 
     def forward(self, data):
         x = self.encoder(data)

@@ -92,6 +92,25 @@ class ResidualTaskHead(nn.Module):
         return self.fc(combined)
 
 
+class IntermediateTaskHead(nn.Module):
+    """
+    Intermediate supervision heads
+    """
+
+    def __init__(self, hidden_dim, output_dim, dropout):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, graph_node_feat):
+        return self.fc(graph_node_feat)
+
+
 # ---------------------------
 # SocialLDG
 # ---------------------------
@@ -104,7 +123,8 @@ class SocialLDG(nn.Module):
             msg_pass_steps: int = 1,
             task_token: str = 'scibert',
             dropout: float = 0.1,
-            subtasks: list = original_subtasks
+            subtasks: list = original_subtasks,
+            intermediate_supervision=0.5,
     ):
         """
         z_dim: backbone 输出维度（每样本）
@@ -123,6 +143,7 @@ class SocialLDG(nn.Module):
         assert self.head_dim * n_heads == hidden_dim, "node_dim must be divisible by n_heads"
         self.K = msg_pass_steps
         self.subtasks = subtasks
+        self.intermediate_supervision = intermediate_supervision
 
         # Disconnect the link from future tasks to current tasks
         mask_tensor = torch.ones((len(subtasks), len(subtasks)))
@@ -207,6 +228,30 @@ class SocialLDG(nn.Module):
                 ResidualTaskHead(z_dim=z_dim, hidden_dim=hidden_dim, output_dim=len(jpl_harper_action_classes),
                                  dropout=dropout))
 
+        if intermediate_supervision:
+            print('Using intermediate supervision')
+            self.intermediate_heads = nn.ModuleList()
+            if 'contact_current' in subtasks:
+                self.intermediate_heads.append(
+                    IntermediateTaskHead(hidden_dim=hidden_dim, output_dim=len(contact_classes), dropout=dropout))
+            if 'contact_future' in subtasks:
+                self.intermediate_heads.append(
+                    IntermediateTaskHead(hidden_dim=hidden_dim, output_dim=len(contact_classes), dropout=dropout))
+            if 'intention' in subtasks:
+                self.intermediate_heads.append(
+                    IntermediateTaskHead(hidden_dim=hidden_dim, output_dim=len(intention_classes), dropout=dropout))
+            if 'attitude' in subtasks:
+                self.intermediate_heads.append(
+                    IntermediateTaskHead(hidden_dim=hidden_dim, output_dim=len(attitude_classes), dropout=dropout))
+            if 'action_current' in subtasks:
+                self.intermediate_heads.append(
+                    IntermediateTaskHead(hidden_dim=hidden_dim, output_dim=len(jpl_harper_action_classes),
+                                         dropout=dropout))
+            if 'action_future' in subtasks:
+                self.intermediate_heads.append(
+                    IntermediateTaskHead(hidden_dim=hidden_dim, output_dim=len(jpl_harper_action_classes),
+                                         dropout=dropout))
+
     def forward(self, z: torch.Tensor):
         B = z.shape[0]
         T = self.T
@@ -259,11 +304,16 @@ class SocialLDG(nn.Module):
         preds = []
         for i, head in enumerate(self.heads):
             preds.append(head(h[:, i, :], z))
+        if self.intermediate_supervision:
+            intermediate_preds = []
+            for i, head in enumerate(self.intermediate_heads):
+                intermediate_preds.append(head(h_norm[:, i, :]))
         l1_loss = alpha_steps[0].mean()
         self.edge_bias = edge_bias
         self.edge_weights = alpha_steps[0]
-        return {"preds": tuple(preds), "edge_index": self.edge_mask.nonzero(as_tuple=False),
-                "edge_weights": alpha_steps[0], "edge_regularization": l1_loss, "z": z}
+        return {"preds": (tuple(preds), tuple(intermediate_preds)) if self.intermediate_supervision else tuple(preds),
+                "edge_index": self.edge_mask.nonzero(as_tuple=False), "edge_weights": alpha_steps[0],
+                "edge_regularization": l1_loss, "z": z}
 
     def slicing_task_tokens(self, task_tokens):
         sliced_task_tokens = torch.zeros((len(self.subtasks), task_tokens.shape[1]))

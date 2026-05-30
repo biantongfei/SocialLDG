@@ -75,6 +75,8 @@ coco_wholebody_l_pair = coco_body_l_pair + head_l_pair + hand_l_pair + [[52, 0],
 jpl_user_num = 15
 harper_user_num = 17
 original_subtasks = ['contact_current', 'contact_future', 'intention', 'attitude', 'action_current', 'action_future']
+intensity_classes = ['Strong_Interaction', 'Weak_Interaction', 'No-Interaction']
+stage_classes = ['Pre-Interaction', 'Approaching', 'Interacting', 'Post-Interaction', 'No-Interaction']
 
 if __name__ == '__main__':
     print(len(coco_wholebody_l_pair))

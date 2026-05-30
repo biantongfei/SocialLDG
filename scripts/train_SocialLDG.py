@@ -38,7 +38,9 @@ def train_socialldg(args, config):
         hidden_dim=config['model']['hidden_dim'],
         task_token=config['model']['task_token'],
         n_heads=config['model']['n_heads'],
+        msg_pass_steps=config['model']['msg_pass_steps'],
         subtasks=subtasks,
+        intermediate_supervision=config['model']['intermediate_supervision']
     )
     if args.pretrained_encoder:
         weights = torch.load(args.pretrained_encoder)
@@ -94,6 +96,9 @@ def train_socialldg(args, config):
         sequence_length=config['data']['sequence_length'],
         batch_size=config['train']['batch_size'],
         zero_mask_rate=config['train']['zero_mask_rate'])
+    loss_weights = [math.log(len(contact_classes)), math.log(len(contact_classes)), math.log(len(intention_classes)),
+                    math.log(len(attitude_classes)), math.log(len(jpl_harper_action_classes)),
+                    math.log(len(jpl_harper_action_classes))]
     for epoch in range(MAX_EPOCH):
         net.train()
         print('Training')
@@ -111,7 +116,10 @@ def train_socialldg(args, config):
             att_labels = att_labels.to(device=device, dtype=torch.long)
             act_cur_labels = act_cur_labels.to(device=device, dtype=torch.long)
             act_fut_labels = act_fut_labels.to(device=device, dtype=torch.long)
-            outputs, _, edge_regularization = net(inputs)
+            if config['train']['intermediate_supervision']:
+                (outputs, intermediate_outputs), _, edge_regularization = net(inputs)
+            else:
+                outputs, _, edge_regularization = net(inputs)
 
             index_task = 0
             losses = []
@@ -133,16 +141,38 @@ def train_socialldg(args, config):
             if 'action_future' in subtasks:
                 losses.append(functional.cross_entropy(outputs[index_task], act_fut_labels))
                 index_task += 1
-
-            weights = [math.log(len(contact_classes)), math.log(len(contact_classes)), math.log(len(intention_classes)),
-                       math.log(len(attitude_classes)), math.log(len(jpl_harper_action_classes)),
-                       math.log(len(jpl_harper_action_classes))]
             total_loss = sum(
-                [weights[original_subtasks.index(t)] * l for t, l in zip(subtasks, losses)])
-            for i in range(len(subtasks)):
-                task_loss_sums[i] += losses[i].item()
+                [loss_weights[original_subtasks.index(t)] * l for t, l in zip(subtasks, losses)])
 
             total_loss += 1e-4 * edge_regularization
+
+            if config['train']['intermediate_supervision']:
+                index_task = 0
+                intermediate_losses = []
+                if 'contact_current' in subtasks:
+                    intermediate_losses.append(
+                        functional.cross_entropy(intermediate_outputs[index_task], con_cur_labels))
+                    index_task += 1
+                if 'contact_future' in subtasks:
+                    intermediate_losses.append(
+                        functional.cross_entropy(intermediate_outputs[index_task], con_fut_labels))
+                    index_task += 1
+                if 'intention' in subtasks:
+                    intermediate_losses.append(functional.cross_entropy(intermediate_outputs[index_task], int_labels))
+                    index_task += 1
+                if 'attitude' in subtasks:
+                    intermediate_losses.append(functional.cross_entropy(intermediate_outputs[index_task], att_labels))
+                    index_task += 1
+                if 'action_current' in subtasks:
+                    intermediate_losses.append(
+                        functional.cross_entropy(intermediate_outputs[index_task], act_cur_labels))
+                    index_task += 1
+                if 'action_future' in subtasks:
+                    intermediate_losses.append(
+                        functional.cross_entropy(intermediate_outputs[index_task], act_fut_labels))
+                    index_task += 1
+                total_loss += config['train']['intermediate_supervision'] * sum(
+                    [loss_weights[original_subtasks.index(t)] * l for t, l in zip(subtasks, intermediate_losses)])
 
             total_loss.backward()
             optimizer.step()
@@ -349,8 +379,12 @@ def train_socialldg(args, config):
                         early_stopper.best_score * 100))
                 break
         elif epoch == config['train']['epochs'] - 1:
-            model_name = 'encoder_SocialLDG_%s.pt' % '.'.join(subtasks)
-            torch.save(net.state_dict(), 'new_weights/%s' % model_name)
+            if config['model']['save_checkpoint']:
+                model_name = 'encoder_SocialLDG_%s.pt' % '.'.join(subtasks)
+                state_dict=net.state_dict
+                if config['model']['keep_intermediate_heads']:
+                    state_dict = {k: v for k, v in state_dict.items() if not k.startswith('intermediate_heads.')}
+                torch.save(state_dict, 'new_weights/%s' % model_name)
             break
         else:
             print('------------------------------------------')

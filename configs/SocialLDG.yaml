@@ -5,12 +5,14 @@ train:
   SocialLDG_learning_rate: 0.005
   weight_decay: 0
   zero_mask_rate: 0.5
+  intermediate_supervision: 0.5
   dropout: 0
 
 
 data:
   sequence_length: 10
   future_length: 10
+  stride: 10
 
 
 model:
@@ -23,5 +25,8 @@ model:
   hidden_dim: 64
   task_token: 'scibert'
   n_heads: 8
+  msg_pass_steps: 1
   subtasks: ['contact_current', 'contact_future', 'intention', 'attitude', 'action_current', 'action_future']
+  save_checkpoint: true
+  keep_intermediate_heads: true
 
